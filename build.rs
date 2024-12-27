@@ -20,6 +20,7 @@ const ASM_DIR: &str = "asm";
 const ASM_NOTE_SCRIPTS_DIR: &str = "note_scripts";
 const ASM_CONTRACTS_DIR: &str = "contracts";
 const NOTE_ERRORS_FILE: &str = "src/errors/note_errors.rs";
+const ACCOUNT_ERRORS_FILE: &str = "src/errors/account_errors.rs";
 
 // PRE-PROCESSING
 // ================================================================================================
@@ -60,7 +61,8 @@ fn main() -> Result<()> {
     // Skip this build script in BUILD_NOTE_ERRORS environment variable is not set to `1`.
     if env::var("BUILD_NOTE_ERRORS").unwrap_or("0".to_string()) == "1" {
         // Generate note error constants.
-        generate_note_error_constants(&source_dir)?;
+        generate_note_error_constants(&source_dir.join(ASM_NOTE_SCRIPTS_DIR), NOTE_ERRORS_FILE)?;
+        generate_note_error_constants(&source_dir.join(ASM_CONTRACTS_DIR), ACCOUNT_ERRORS_FILE)?;
     }
 
 
@@ -212,7 +214,7 @@ fn is_masm_file(path: &Path) -> io::Result<bool> {
     }
 }
 
-fn generate_note_error_constants(note_source_dir: &Path) -> Result<()> {
+fn generate_note_error_constants(note_source_dir: &Path, result: &str) -> Result<()> {
     // Because the error files will be written to ./src/errors, this should be a no-op if ./src is
     // read-only
     if !CAN_WRITE_TO_SRC {
@@ -246,7 +248,7 @@ fn generate_note_error_constants(note_source_dir: &Path) -> Result<()> {
 
     // Generate the errors file.
     let error_file_content = generate_note_errors(errors)?;
-    std::fs::write(NOTE_ERRORS_FILE, error_file_content).into_diagnostic()?;
+    std::fs::write(result, error_file_content).into_diagnostic()?;
 
     Ok(())
 }

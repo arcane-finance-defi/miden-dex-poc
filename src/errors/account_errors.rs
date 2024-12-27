@@ -10,10 +10,8 @@
 // NOTE ASSERTION ERROR
 // ================================================================================================
 
-pub const ERR_P2ID_TARGET_ACCT_MISMATCH: u32 = 0x00020051;
-pub const ERR_P2ID_WRONG_NUMBER_OF_INPUTS: u32 = 0x00020050;
+pub const ERR_POOL_ASSET_IS_NOT_IN_PAIR: u32 = 0x00020080;
 
-pub const NOTE_ERRORS: [(u32, &str); 2] = [
-    (ERR_P2ID_TARGET_ACCT_MISMATCH, "P2ID's target account address and transaction address do not match"),
-    (ERR_P2ID_WRONG_NUMBER_OF_INPUTS, "P2ID script expects exactly 1 note input"),
+pub const NOTE_ERRORS: [(u32, &str); 1] = [
+    (ERR_POOL_ASSET_IS_NOT_IN_PAIR, "Asset is not in pair error"),
 ];

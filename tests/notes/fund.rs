@@ -1,5 +1,5 @@
 use dex_poc::{
-    errors::note_errors::ERR_P2ID_PRIVATE_TARGET_ACCT_MISMATCH, notes::create_fund_note,
+    errors::note_errors::ERR_P2ID_TARGET_ACCT_MISMATCH, notes::create_fund_note,
 };
 use miden_objects::{
     accounts::{
@@ -84,5 +84,5 @@ fn fund_script_multiple_assets() {
         .execute();
 
     // Check that we got the expected result - TransactionExecutorError
-    assert_transaction_executor_error!(executed_transaction_2, ERR_P2ID_PRIVATE_TARGET_ACCT_MISMATCH)
+    assert_transaction_executor_error!(executed_transaction_2, ERR_P2ID_TARGET_ACCT_MISMATCH)
 }

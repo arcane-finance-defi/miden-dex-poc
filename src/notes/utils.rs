@@ -10,11 +10,11 @@ use miden_objects::{
 ///
 /// Notes created with this recipient will be P2ID notes consumable by the specified target
 /// account.
-pub fn build_p2id_recipient(
+pub fn build_fund_recipient(
     target: AccountId,
     serial_num: Word,
 ) -> Result<NoteRecipient, NoteError> {
-    let bytes = include_bytes!(concat!(env!("OUT_DIR"), "/assets/note_scripts/P2ID.masb"));
+    let bytes = include_bytes!(concat!(env!("OUT_DIR"), "/assets/note_scripts/fund.masb"));
     let program =
         Program::read_from_bytes(bytes).map_err(NoteError::NoteScriptDeserializationError)?;
     let note_script = NoteScript::new(program);

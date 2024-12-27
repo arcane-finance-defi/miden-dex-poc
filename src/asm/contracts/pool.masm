@@ -11,7 +11,7 @@ const.INCOMING_FAUCET_ID_MEM_SLOT=0
 const.PAIR_FAUCETS_SLOT=0
 
 # Asset is not in pair error
-const.ERR_POOL_ASSET_IS_NOT_IN_PAIR=131201
+const.ERR_POOL_ASSET_IS_NOT_IN_PAIR=0x00020080
 
 # acct proc 0
 # export.::miden::contracts::wallets::basic::receive_asset
