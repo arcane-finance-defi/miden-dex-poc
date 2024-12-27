@@ -1,0 +1,45 @@
+[package]
+name = "dex_poc"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+
+[lib]
+
+[features]
+default = ["std", "testing"]
+std = ["miden-assembly/std", "miden-objects/std", "miden-stdlib/std"]
+# the testing feature is required to enable the account creation pow patch
+testing = ["miden-objects/testing"]
+with-debug-info = ["miden-stdlib/with-debug-info"]
+
+[dependencies]
+miden-lib = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"] }
+miden-objects = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"]}
+regex = { version = "1.10" }
+walkdir = { version = "2.5" }
+miden-assembly = "0.11.0"
+miden-stdlib = "0.11.0"
+
+[dev-dependencies]
+miden-lib = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"] }
+miden-objects = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next" }
+miden-tx = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"]}
+miden-prover = { version = "0.11", default-features = false }
+vm-processor = { package = "miden-processor", version = "0.11", default-features = false }
+
+
+[build-dependencies]
+regex = { version = "1.10" }
+walkdir = { version = "2.5" }
+miden-assembly = "0.11.0"
+miden-stdlib = "0.11.0"
+miden-lib = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next" }
+
+[profile.test-release]
+inherits = "release"
+debug = true
+debug-assertions = true
+overflow-checks = true
+
+

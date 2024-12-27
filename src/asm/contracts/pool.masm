@@ -1,0 +1,160 @@
+use.miden::account
+use.std::sys
+use.miden::contracts::wallets::basic->wallet
+
+const.ASSET_IN=0
+const.ASSET_OUT=1
+const.RECIPIENT_OUT=2
+
+const.INCOMING_FAUCET_ID_MEM_SLOT=0
+
+const.PAIR_FAUCETS_SLOT=0
+
+# Asset is not in pair error
+const.ERR_POOL_ASSET_IS_NOT_IN_PAIR=131201
+
+# acct proc 0
+# export.::miden::contracts::wallets::basic::receive_asset
+# Inputs:  [ASSET, pad(12)]
+export.receive_asset
+    dupw movdn.3 drop drop drop
+    mem_store.INCOMING_FAUCET_ID_MEM_SLOT
+    # => [asset_faucet_id, ASSET]
+    push.PAIR_FAUCETS_SLOT exec.account::get_item 
+    movup.2 drop movup.2 drop
+    mem_load.INCOMING_FAUCET_ID_MEM_SLOT
+    # => [asset_faucet_id, pair_felt_2, pair_felt_3, ASSET]
+    dup movdn.2 eq movdn.2
+    # => [asset_faucet_id, pair_felt_3, is_asset_eq_felt2, ASSET]
+    eq swap
+    # => [is_asset_eq_felt2, is_asset_eq_felt3, ASSET]
+    or
+    # => [is_asset_found_in_pair_storage, ASSET]
+    assert.err=ERR_POOL_ASSET_IS_NOT_IN_PAIR
+    # => [ASSET]
+    exec.wallet::receive_asset
+    push.1
+    exec.account::incr_nonce
+end
+
+# internal procedure
+# inputs: [tokenBalX, tokenBalY, tokenAmountInX]
+# outputs: [tokenAmountOutY]
+proc.calculate_amount_y_out
+    dup.2
+    # [dx, x, y, dx]
+
+    movup.2
+    # [y, dx, x, dx]
+
+    mul
+    div.1000000
+    # [dx * y, x, dx]
+
+    swap.2
+    # [dx, x, dx * y]
+
+    add
+    # [dx + x, dx * y]
+
+    # divide by 1e3 to have some floating point
+    div.1000
+
+    # note when dividing...
+    # a / b
+    # [b, a]
+    u32div
+
+end
+
+# acct proc 2
+
+# [ASSET_IN, asset_id_out, RECIPIENT]
+export.swap
+    push.111 debug.stack drop
+
+    mem_storew.ASSET_IN dropw
+    # => [asset_id_out, RECIPIENT]
+
+    debug.stack
+
+    push.0.0.0 mem_storew.ASSET_OUT dropw
+    # => [RECIPIENT]
+
+    mem_storew.RECIPIENT_OUT
+    # => []
+
+    mem_load.ASSET_IN
+    # => [amt_in_x]
+
+    mem_loadw.ASSET_OUT drop drop drop
+    # => [faucet_id_Y, amt_in_x]
+
+    debug.stack
+
+    exec.account::get_balance
+    # => [amt_Y, amt_in_x]
+
+    debug.stack debug.mem
+
+    mem_loadw.ASSET_IN drop drop drop
+    # => [faucet_id_X, amt_Y, amt_in_x]
+
+    exec.account::get_balance
+    # => [amt_X, amt_Y, amt_in_x]
+
+    mem_loadw.ASSET_IN
+    # [ASSET_IN, amt_X, amt_Y, amt_in_x]
+
+    call.wallet::receive_asset dropw
+    movup.2 drop
+
+    debug.stack
+
+    # stack
+    # ├──  0: tokenB balance
+    # ├──  1: tokenA balance
+
+    mul.1000
+    swap
+    mul.1000
+    swap
+
+    # stack
+    # ├──  0: tokenB balance scaled 1e3
+    # ├──  1: tokenA balance scaled 1e3
+
+    # load amount in X
+    mem_load.0
+    mul.1000
+    swap.2
+
+    exec.calculate_amount_y_out
+
+    mem_store.4
+
+    padw padw
+    mem_loadw.RECIPIENT_OUT # RECIPIENT
+    push.0 # execution_hint
+    push.2 # note_type
+    push.0 # aux
+    push.3758096384 # tag
+
+    push.22222
+    debug.stack
+    drop
+
+    # => [tag, aux, note_type, execution_hint, RECIPIENT, pad(8)]
+    call.wallet::create_note
+    # => [note_idx, pad(15)]
+
+    mem_loadw.ASSET_OUT
+    # => [ASSET_OUT, note_idx, pad(15)]
+    call.wallet::move_asset_to_note
+
+    push.1
+    exec.account::incr_nonce
+
+    exec.sys::truncate_stack
+
+end
