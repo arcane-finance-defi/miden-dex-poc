@@ -1,0 +1,58 @@
+use.miden::account
+use.miden::note
+use.std::sys
+use.dex::pool
+
+
+# SWAP script expects exactly 5 note inputs
+const.ERR_DEX_SWAP_WRONG_NUMBER_OF_INPUTS=0x00020500
+
+# SWAP script expects exactly 1 note asset
+const.ERR_DEX_SWAP_WRONG_NUMBER_OF_ASSETS=0x00020501
+
+const.RECIPIENT_MEM_ADDR=0
+const.ASSET_OUT_FAUCET_MEM_ADDR=1
+const.ASSET_IN_MEM_ADDR=2
+
+#! Swap order script: swaps assets with dex pool account. Results in P2ID note with provided RECIPIENT.
+#!
+#! Requires that the account exposes:
+#! - dex::pool::swap procedure.
+#!
+#! Inputs:  []
+#! Outputs: []
+#!
+#! Note inputs are assumed to be as follows:
+#! - RECIPIENT is the word of RECIPIENT that will be used for note creation.
+#! - asset_out_faucet is the ID of output asset account.
+#!
+#! Panics if:
+#! - Account does not expose dex::pool::swap procedure.
+#! - asset_out_faucet is not in the the pool assets.
+#! - Adding a fungible asset would result in amount overflow, i.e., the total amount would be
+#!   greater than 2^63.
+begin
+
+    # store the note inputs to memory starting at address 0
+    push.0 exec.note::get_inputs
+    # => [num_inputs, inputs_ptr]
+
+    # make sure the number of inputs is 5
+    eq.5 assert.err=ERR_DEX_SWAP_WRONG_NUMBER_OF_INPUTS
+    drop
+
+    push.ASSET_IN_MEM_ADDR
+    exec.note::get_assets
+    # => [num_assets]
+
+    eq.1 assert.err=ERR_DEX_SWAP_WRONG_NUMBER_OF_ASSETS
+    drop
+
+    padw mem_loadw.RECIPIENT_MEM_ADDR 
+    mem_load.ASSET_OUT_FAUCET_MEM_ADDR 
+    padw mem_loadw.ASSET_IN_MEM_ADDR
+
+    call.pool::swap
+
+    exec.sys::truncate_stack
+end

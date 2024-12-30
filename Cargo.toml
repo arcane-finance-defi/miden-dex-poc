@@ -20,6 +20,7 @@ regex = { version = "1.10" }
 walkdir = { version = "2.5" }
 miden-assembly = "0.11.0"
 miden-stdlib = "0.11.0"
+miden-tx = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"]}
 
 [dev-dependencies]
 miden-lib = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"] }

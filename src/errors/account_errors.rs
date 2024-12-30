@@ -12,6 +12,10 @@
 
 pub const ERR_POOL_ASSET_IS_NOT_IN_PAIR: u32 = 0x00020080;
 
-pub const NOTE_ERRORS: [(u32, &str); 1] = [
+pub const ERR_SAME_ASSET_IN_AND_OUT: u32 = 0x00020081;
+
+pub const NOTE_ERRORS: [(u32, &str); 2] = [
     (ERR_POOL_ASSET_IS_NOT_IN_PAIR, "Asset is not in pair error"),
+
+    (ERR_SAME_ASSET_IN_AND_OUT, "Asset is not in pair error"),
 ];

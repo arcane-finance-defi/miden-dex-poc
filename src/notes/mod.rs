@@ -1,14 +1,11 @@
 use alloc::vec::Vec;
 
+use miden_lib::notes::utils::build_p2id_recipient;
 use miden_objects::{
-    accounts::AccountId,
-    assets::Asset,
-    crypto::rand::FeltRng,
-    notes::{
+    accounts::AccountId, assets::Asset, crypto::rand::FeltRng, notes::{
         Note, NoteAssets, NoteExecutionHint, NoteExecutionMode, NoteInputs,
         NoteMetadata, NoteRecipient, NoteTag, NoteType,
-    },
-    Felt, NoteError,
+    }, Felt, FieldElement, NoteError
 };
 
 pub mod scripts;
@@ -45,4 +42,36 @@ pub fn create_fund_note<R: FeltRng>(
     let vault = NoteAssets::new(assets)?;
     let recipient = NoteRecipient::new(serial_num, note_script, inputs);
     Ok(Note::new(vault, metadata, recipient))
+}
+
+pub fn create_swap_note<R: FeltRng>(
+    receiver: AccountId,
+    asset: Asset,
+    asset_out: AccountId,
+    note_type: NoteType,
+    aux: Felt,
+    rng: &mut R,
+) -> Result<(Note, NoteRecipient), NoteError> {
+    let note_script = scripts::swap();
+
+    let result_serial_num = rng.draw_word();
+    let result_recipient = build_p2id_recipient(receiver, result_serial_num)?;
+
+    let mut inputs = result_recipient.digest().as_elements().to_vec();
+    inputs.push(asset_out.into());
+
+    let inputs = NoteInputs::new(inputs)?; // 5 input
+    let serial_num = rng.draw_word();
+
+    let metadata = NoteMetadata::new(
+        AccountId::new_unchecked(Felt::ZERO), 
+        note_type, 
+        NoteTag::from(0), 
+        NoteExecutionHint::always(), 
+        aux
+    )?;
+
+    let vault = NoteAssets::new(vec![asset])?;
+    let recipient = NoteRecipient::new(serial_num, note_script, inputs);
+    Ok((Note::new(vault, metadata, recipient), result_recipient))
 }
