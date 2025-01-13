@@ -7,27 +7,29 @@ rust-version = "1.82"
 [lib]
 
 [features]
-default = ["std", "testing"]
+default = []
 std = ["miden-assembly/std", "miden-objects/std", "miden-stdlib/std"]
+async = ["miden-tx/async"]
 # the testing feature is required to enable the account creation pow patch
-testing = ["miden-objects/testing"]
+testing = ["miden-objects/testing", "miden-tx/testing", "miden-lib/testing"]
 with-debug-info = ["miden-stdlib/with-debug-info"]
 
 [dependencies]
-miden-lib = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"] }
-miden-objects = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"]}
+miden-lib = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std"] }
+miden-objects = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std"]}
 regex = { version = "1.10" }
 walkdir = { version = "2.5" }
 miden-assembly = "0.11.0"
 miden-stdlib = "0.11.0"
-miden-tx = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"]}
+miden-tx = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std"]}
 
 [dev-dependencies]
-miden-lib = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"] }
-miden-objects = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next" }
+miden-lib = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std"] }
+miden-objects = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["testing"] }
 miden-tx = { git = "https://github.com/0xPolygonMiden/miden-base", branch = "next", features = ["std", "testing"]}
 miden-prover = { version = "0.11", default-features = false }
 vm-processor = { package = "miden-processor", version = "0.11", default-features = false }
+winter-maybe-async = { version = "0.10" }
 
 
 [build-dependencies]
@@ -42,5 +44,6 @@ inherits = "release"
 debug = true
 debug-assertions = true
 overflow-checks = true
+
 
 

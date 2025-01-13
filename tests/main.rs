@@ -1,6 +1,8 @@
 extern crate alloc;
+mod common;
 
 mod contracts;
+
 mod notes;
 
 // HELPER FUNCTIONS

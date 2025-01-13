@@ -34,7 +34,7 @@ pub fn create_fund_note<R: FeltRng>(
 ) -> Result<Note, NoteError> {
     let note_script = scripts::fund();
 
-    let inputs = NoteInputs::new(vec![target.into()])?; // 1 input
+    let inputs = NoteInputs::new(vec![target.first_felt(), target.second_felt()])?; // 2 input
     let tag = NoteTag::from_account_id(target, NoteExecutionMode::Local)?;
     let serial_num = rng.draw_word();
 
@@ -58,13 +58,14 @@ pub fn create_swap_note<R: FeltRng>(
     let result_recipient = build_p2id_recipient(receiver, result_serial_num)?;
 
     let mut inputs = result_recipient.digest().as_elements().to_vec();
-    inputs.push(asset_out.into());
+    inputs.push(asset_out.first_felt());
+    inputs.push(asset_out.second_felt());
 
     let inputs = NoteInputs::new(inputs)?; // 5 input
     let serial_num = rng.draw_word();
 
     let metadata = NoteMetadata::new(
-        AccountId::new_unchecked(Felt::ZERO), 
+        AccountId::new_unchecked([Felt::ZERO, Felt::ZERO]), 
         note_type, 
         NoteTag::from(0), 
         NoteExecutionHint::always(), 

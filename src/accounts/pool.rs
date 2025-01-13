@@ -1,9 +1,8 @@
 use crate::accounts::components::pool_account_library;
 
 use miden_objects::{
-    accounts::{Account, AccountBuilder, AccountComponent, AccountId, AccountStorageMode, AccountType, StorageSlot},
+    accounts::{Account, AccountBuilder, AccountComponent, AccountId, AccountIdAnchor, AccountStorageMode, AccountType, StorageSlot},
     AccountError, Word,
-    Felt
 };
 
 pub struct PoolAccount {
@@ -23,10 +22,10 @@ impl From<PoolAccount> for AccountComponent {
             pool_account_library(), 
             vec![
                 StorageSlot::Value([
-                    Felt::new(0), 
-                    Felt::new(0), 
-                    pool.asset_faucets[0].into(), 
-                    pool.asset_faucets[1].into(), 
+                    pool.asset_faucets[0].first_felt(), 
+                    pool.asset_faucets[0].second_felt(), 
+                    pool.asset_faucets[1].first_felt(), 
+                    pool.asset_faucets[1].second_felt(), 
                 ])
             ]
         )
@@ -53,12 +52,13 @@ pub fn create_pool_account(
     asset_faucets: [AccountId; 2],
     account_type: AccountType,
     account_storage_mode: AccountStorageMode,
+    anchor: AccountIdAnchor,
 ) -> Result<(Account, Word), AccountError> {
     let (account, account_seed) = account_builder(
         init_seed, 
         asset_faucets,
         account_type, 
         account_storage_mode
-    ).build()?;
+    ).anchor(anchor).build()?;
     Ok((account, account_seed))
 }

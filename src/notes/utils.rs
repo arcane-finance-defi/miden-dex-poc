@@ -18,7 +18,7 @@ pub fn build_fund_recipient(
     let program =
         Program::read_from_bytes(bytes).map_err(NoteError::NoteScriptDeserializationError)?;
     let note_script = NoteScript::new(program);
-    let note_inputs = NoteInputs::new(vec![target.into()])?;
+    let note_inputs = NoteInputs::new(vec![target.first_felt(), target.second_felt()])?;
 
     Ok(NoteRecipient::new(serial_num, note_script, note_inputs))
 }

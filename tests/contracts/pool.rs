@@ -1,29 +1,33 @@
-use dex_poc::{accounts::pool::create_pool_account, notes::create_fund_note, errors::account_errors::ERR_POOL_ASSET_IS_NOT_IN_PAIR };
+use dex_poc::{accounts::pool::create_pool_account, errors::account_errors::ERR_POOL_ASSET_IS_NOT_IN_PAIR, notes::create_fund_note };
 use miden_assembly::diagnostics::IntoDiagnostic;
 use miden_objects::{
     accounts::{
-        account_id::testing::{ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN, ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_1, ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_2}, Account, AccountId, AccountStorageMode, AccountType
-    },
-    assets::{Asset, AssetVault, FungibleAsset}, notes::NoteType,
+        Account, AccountStorageMode, AccountType
+    }, assets::{Asset, AssetVault, FungibleAsset}, notes::NoteType, testing::account_id::{
+        ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN, ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_1, ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_2
+    }
 };
 use miden_tx::testing::{Auth, MockChain, TransactionContextBuilder};
 use vm_processor::{crypto::RpoRandomCoin, Felt};
 
+use crate::common::executor::execute;
 use crate::assert_transaction_executor_error;
 
 #[test]
 fn test_fund_pool_without_authentication() {
+    let mut mock_chain = MockChain::new();
+
     let (pool, pool_seed) = create_pool_account(
         [1; 32],
         [
-                AccountId::new_unchecked(Felt::new(ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN)), 
-                AccountId::new_unchecked(Felt::new(ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_2))
+            ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN.try_into().unwrap(), 
+            ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_2.try_into().unwrap()
             ],
         AccountType::RegularAccountImmutableCode,
         AccountStorageMode::Public,
+        (&mock_chain.block_header(0)).try_into().unwrap()
     ).into_diagnostic().unwrap();
 
-    let mut mock_chain = MockChain::new();
 
     // Create assets
     let fungible_asset_1: Asset = 
@@ -80,17 +84,19 @@ fn test_fund_pool_without_authentication() {
 
 #[test]
 fn test_fund_pool_with_inappropriate_asset_faucet() {
+    let mut mock_chain = MockChain::new();
+
     let (pool, pool_seed) = create_pool_account(
         [1; 32],
         [
-                AccountId::new_unchecked(Felt::new(ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_1)), 
-                AccountId::new_unchecked(Felt::new(ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_2))
+                ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_1.try_into().unwrap(), 
+                ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_2.try_into().unwrap()
             ],
         AccountType::RegularAccountImmutableCode,
         AccountStorageMode::Public,
+        (&mock_chain.block_header(0)).try_into().unwrap()
     ).into_diagnostic().unwrap();
 
-    let mut mock_chain = MockChain::new();
 
     // Create assets
     let fungible_asset_1: Asset = 
@@ -126,10 +132,9 @@ fn test_fund_pool_with_inappropriate_asset_faucet() {
         funding_note.id()
     ], &[]);
 
-    let executed_transaction = TransactionContextBuilder::new(pool.clone())
+    let executed_transaction = execute(TransactionContextBuilder::new(pool.clone())
         .tx_inputs(tx_inputs)
-        .build()
-        .execute();
+        .build());
 
     assert_transaction_executor_error!(executed_transaction, ERR_POOL_ASSET_IS_NOT_IN_PAIR);
 

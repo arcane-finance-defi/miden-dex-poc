@@ -19,20 +19,20 @@ const.ERR_POOL_ASSET_IS_NOT_IN_PAIR=0x00020080
 # Asset is not in pair error
 const.ERR_SAME_ASSET_IN_AND_OUT=0x00020081
 
-# Inputs: [asset_faucet_id]
+# Inputs: [asset_faucet_id_felt_2, asset_faucet_id_felt_1]
 # Outputs: [asset_kind] 0 = NOT_IN_PAIR, 1 = TOKEN_1, 2 = TOKEN_2
 proc.find_asset_in_pair
     push.PAIR_FAUCETS_SLOT exec.account::get_item 
-    movup.2 drop movup.2 drop
-    # => [token1_faucet_id, token2_faucet_id, asset_faucet_id]
+    # => [token1_faucet_id_felt_2, token1_faucet_id_felt_1, token2_faucet_id_felt_2, token2_faucet_id_felt_1, asset_faucet_id_felt_2, asset_faucet_id_felt_1]
 
-    dup.2 eq
+    dup.4 eq swap dup.5 eq and
+    # => [is_asset_is_token1, token2_faucet_id_felt_2, token2_faucet_id_felt_1, asset_faucet_id_felt_2, asset_faucet_id_felt_1]
 
     if.true
-        drop drop
+        dropw
         push.ASSET_IS_TOKEN_1
     else
-        eq
+        movup.2 eq swap movup.2 eq and
         if.true
             push.ASSET_IS_TOKEN_2
         else
@@ -45,7 +45,7 @@ end
 # export.::miden::contracts::wallets::basic::receive_asset
 # Inputs:  [ASSET, pad(12)]
 export.receive_asset
-    dupw movdn.3 drop drop drop
+    dupw movup.2 drop movup.2 drop swap
     exec.find_asset_in_pair
     neq.0 assert.err=ERR_POOL_ASSET_IS_NOT_IN_PAIR
     # => [ASSET]
@@ -86,16 +86,16 @@ end
 
 # acct proc 2
 
-# [ASSET_IN, asset_id_out, RECIPIENT]
+# [ASSET_IN, asset_id_out_felt_2, asset_id_out_felt_1, RECIPIENT]
 export.swap
     mem_storew.ASSET_IN 
-    dup exec.find_asset_in_pair
+    dup dup.2 exec.find_asset_in_pair
     neq.0 assert.err=ERR_POOL_ASSET_IS_NOT_IN_PAIR
     dropw
-    # => [asset_id_out, RECIPIENT]
+    # => [asset_id_out_felt_2, asset_id_out_felt_1, RECIPIENT]
 
-    push.0.0.0 movup.3 mem_storew.ASSET_OUT 
-    dup exec.find_asset_in_pair
+    push.0.0 movup.3 movup.3 mem_storew.ASSET_OUT 
+    dup dup.2 exec.find_asset_in_pair
     neq.0 assert.err=ERR_POOL_ASSET_IS_NOT_IN_PAIR
     dropw
     # => [RECIPIENT]
@@ -105,26 +105,24 @@ export.swap
     
     exec.sys::truncate_stack
 
-    padw mem_loadw.ASSET_IN
+    padw mem_loadw.ASSET_IN movup.2 drop movup.2 drop swap
     exec.find_asset_in_pair
-    movdn.3 drop drop drop
-    padw mem_loadw.ASSET_OUT
+    padw mem_loadw.ASSET_OUT movup.2 drop movup.2 drop swap
     exec.find_asset_in_pair
-    movdn.3 drop drop drop
     neq assert.err=ERR_SAME_ASSET_IN_AND_OUT
 
     mem_load.ASSET_IN
     # => [amt_in_x]
 
-    padw mem_loadw.ASSET_OUT movdn.3 drop drop drop
-    # => [faucet_id_Y, amt_in_x]
+    padw mem_loadw.ASSET_OUT movup.2 drop movup.2 drop
+    # => [faucet_id_Y_felt_2, faucet_id_Y_felt_1, amt_in_x]
 
     call.account::get_balance
     
     # => [amt_Y, amt_in_x]
 
-    padw mem_loadw.ASSET_IN movdn.3 drop drop drop
-    # => [faucet_id_X, amt_Y, amt_in_x]
+    padw mem_loadw.ASSET_IN movup.2 drop movup.2 drop
+    # => [faucet_id_X_felt_2, faucet_id_X_felt_1, amt_Y, amt_in_x]
 
     call.account::get_balance
     # => [amt_X, amt_Y, amt_in_x]

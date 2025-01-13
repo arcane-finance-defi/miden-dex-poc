@@ -1,21 +1,11 @@
-use dex_poc::{
-    notes::create_swap_note, 
-    testing::{
-        accounts::create_prefunded_pool_account, 
-        executor::execute_with_debugger, 
-        notes::create_p2id_note_from_recipient, 
-        swap::calculate_swap
-    }
-};
+use dex_poc::notes::create_swap_note;
 use miden_assembly::diagnostics::IntoDiagnostic;
 use miden_objects::{
-    accounts::{
-        account_id::testing::{
-            ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_1, 
-            ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_2
-        }, 
-        Account
-    }, 
+    testing::account_id::{
+        ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_1, 
+        ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_2
+    },
+    accounts::Account, 
     assets::{
         AssetVault, 
         FungibleAsset
@@ -26,6 +16,13 @@ use miden_objects::{
 };
 use miden_tx::testing::{Auth, MockChain, TransactionContextBuilder};
 use vm_processor::{crypto::RpoRandomCoin, Felt};
+
+use crate::common::{
+    accounts::create_prefunded_pool_account,
+    executor::execute_with_debugger,
+    notes::create_p2id_note_from_recipient,
+    swap::calculate_swap
+};
 
 #[test]
 fn swap_should_swap_against_pool() {
@@ -120,8 +117,8 @@ fn swap_should_swap_against_pool() {
             &[result_note.clone().id()], 
             &[])
         .build()
-        .execute().into_diagnostic()
-        .unwrap();
+        .execute()
+        .into_diagnostic().unwrap();
 
     // vault delta
     let target_account_after: Account = Account::from_parts(

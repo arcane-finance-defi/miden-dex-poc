@@ -8,7 +8,7 @@ help:
 
 WARNINGS=RUSTDOCFLAGS="-D warnings"
 DEBUG_ASSERTIONS=RUSTFLAGS="-C debug-assertions"
-ALL_FEATURES_BUT_ASYNC=--features concurrent,testing
+ALL_FEATURES_BUT_ASYNC=--features testing
 BUILD_NOTE_ERRORS=BUILD_NOTE_ERRORS=1
 
 # -- linting --------------------------------------------------------------------------------------
@@ -40,12 +40,12 @@ lint: format fix clippy ## Runs all linting tasks at once (Clippy, fixing, forma
 
 .PHONY: test-build
 test-build: ## Build the test binary
-	$(DEBUG_ASSERTIONS) cargo nextest run --cargo-profile test-release --all-features --no-run
+	$(DEBUG_ASSERTIONS) cargo nextest run --cargo-profile test-release $(ALL_FEATURES_BUT_ASYNC) --no-run
 
 
 .PHONY: test-default
 test-default: ## Run default tests 
-	$(DEBUG_ASSERTIONS) cargo nextest run --profile default --cargo-profile test-release --all-features
+	$(DEBUG_ASSERTIONS) cargo nextest run --profile default --cargo-profile test-release $(ALL_FEATURES_BUT_ASYNC)
 
 
 .PHONY: test
