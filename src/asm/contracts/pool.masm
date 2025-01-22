@@ -7,7 +7,7 @@ const.ASSET_AMT_OFFSET=3
 const.ASSET_IN=0
 const.ASSET_OUT=1
 const.RECIPIENT_OUT=2
-
+const.TAG_OUT=3
 const.PAIR_FAUCETS_SLOT=0
 
 const.ASSET_NOT_IN_PAIR=0
@@ -86,21 +86,24 @@ end
 
 # acct proc 2
 
-# [ASSET_IN, asset_id_out_felt_2, asset_id_out_felt_1, RECIPIENT]
+# [ASSET_IN, asset_id_out_felt_2, asset_id_out_felt_1, RECIPIENT, tag]
 export.swap
     mem_storew.ASSET_IN 
     dup dup.2 exec.find_asset_in_pair
     neq.0 assert.err=ERR_POOL_ASSET_IS_NOT_IN_PAIR
     dropw
-    # => [asset_id_out_felt_2, asset_id_out_felt_1, RECIPIENT]
+    # => [asset_id_out_felt_2, asset_id_out_felt_1, RECIPIENT, tag]
 
     push.0.0 movup.3 movup.3 mem_storew.ASSET_OUT 
     dup dup.2 exec.find_asset_in_pair
     neq.0 assert.err=ERR_POOL_ASSET_IS_NOT_IN_PAIR
     dropw
-    # => [RECIPIENT]
+    # => [RECIPIENT, tag]
 
     mem_storew.RECIPIENT_OUT dropw
+    # => [tag]
+
+    mem_storew.TAG_OUT
     # => []
     
     exec.sys::truncate_stack
@@ -163,7 +166,7 @@ export.swap
     push.0 # execution_hint
     push.2 # note_type
     push.0 # aux
-    push.3758096384 # tag
+    padw mem_loadw.TAG_OUT movdn.3 drop drop drop # tag
 
     # => [tag, aux, note_type, execution_hint, RECIPIENT, pad(8)]
     exec.wallet::create_note

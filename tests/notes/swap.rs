@@ -42,7 +42,7 @@ fn swap_should_swap_against_pool() {
         ],
     ).into_diagnostic().unwrap();
 
-    let (swap_note, p2id_recipient) = &create_swap_note(
+    let (swap_note, response_tag, p2id_recipient) = &create_swap_note(
         sender.id(),
         FungibleAsset::new(ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_1.try_into().unwrap(), 100)
                 .unwrap()
@@ -55,7 +55,7 @@ fn swap_should_swap_against_pool() {
 
     let expected_amount_out: u64 = calculate_swap(10_000, 10_000, 100) as u64;
 
-    let result_note = &create_p2id_note_from_recipient(p2id_recipient.clone(), vec![
+    let result_note = &create_p2id_note_from_recipient(p2id_recipient.clone(), response_tag.clone(), vec![
         FungibleAsset::new(ACCOUNT_ID_FUNGIBLE_FAUCET_ON_CHAIN_2.try_into().unwrap(), expected_amount_out)
             .unwrap()
             .into()

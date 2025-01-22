@@ -1,15 +1,17 @@
 use alloc::vec::Vec;
 
-use miden_lib::notes::utils::build_p2id_recipient;
+use miden_lib::notes::{scripts::p2id, utils::build_p2id_recipient};
 use miden_objects::{
     accounts::AccountId, assets::Asset, crypto::rand::FeltRng, notes::{
         Note, NoteAssets, NoteExecutionHint, NoteExecutionMode, NoteInputs,
         NoteMetadata, NoteRecipient, NoteTag, NoteType,
-    }, Felt, FieldElement, NoteError
+    }, Felt, FieldElement, NoteError, Word
 };
 
 pub mod scripts;
 pub mod utils;
+
+pub const SWAP_USE_CASE_ID: u16 = 4578;
 
 // STANDARDIZED SCRIPTS
 // ================================================================================================
@@ -51,17 +53,20 @@ pub fn create_swap_note<R: FeltRng>(
     note_type: NoteType,
     aux: Felt,
     rng: &mut R,
-) -> Result<(Note, NoteRecipient), NoteError> {
+) -> Result<(Note, NoteTag, NoteRecipient), NoteError> {
     let note_script = scripts::swap();
 
     let result_serial_num = rng.draw_word();
     let result_recipient = build_p2id_recipient(receiver, result_serial_num)?;
 
-    let mut inputs = result_recipient.digest().as_elements().to_vec();
+    let response_tag = NoteTag::for_local_use_case(SWAP_USE_CASE_ID, rng.draw_element().as_int() as u16)?;
+
+    let mut inputs: Vec<Felt> = vec![response_tag.into()];
+    inputs.append(&mut result_recipient.digest().as_elements().to_vec());
     inputs.push(asset_out.first_felt());
     inputs.push(asset_out.second_felt());
 
-    let inputs = NoteInputs::new(inputs)?; // 5 input
+    let inputs = NoteInputs::new(inputs)?; // 7 input
     let serial_num = rng.draw_word();
 
     let metadata = NoteMetadata::new(
@@ -74,5 +79,27 @@ pub fn create_swap_note<R: FeltRng>(
 
     let vault = NoteAssets::new(vec![asset])?;
     let recipient = NoteRecipient::new(serial_num, note_script, inputs);
-    Ok((Note::new(vault, metadata, recipient), result_recipient))
+    Ok((Note::new(vault, metadata, recipient), response_tag, result_recipient))
+}
+
+
+pub fn build_swap_result_from_parts(
+    receiver: AccountId,
+    serial_num: Word,
+    assets: NoteAssets,
+    pool_id: AccountId,
+    tag: NoteTag
+) -> Result<Note, NoteError> {
+    let script = p2id();
+    let recipient = NoteRecipient::new(serial_num, script, NoteInputs::new(vec![receiver.second_felt(), receiver.first_felt()])?);
+
+    let metadata = NoteMetadata::new(
+        pool_id,
+        NoteType::Private,
+        tag,
+        NoteExecutionHint::always(),
+        Felt::ZERO
+    )?;
+
+    Ok(Note::new(assets, metadata, recipient))
 }

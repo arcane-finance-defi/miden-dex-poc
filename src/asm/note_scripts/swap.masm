@@ -4,7 +4,7 @@ use.std::sys
 use.dex::pool
 
 
-# SWAP script expects exactly 6 note inputs
+# SWAP script expects exactly 7 note inputs
 const.ERR_DEX_SWAP_WRONG_NUMBER_OF_INPUTS=0x00020500
 
 # SWAP script expects exactly 1 note asset
@@ -19,7 +19,7 @@ const.ASSET_IN_MEM_ADDR=2
 #! Requires that the account exposes:
 #! - dex::pool::swap procedure.
 #!
-#! Inputs:  [asset_out_felt_2, asset_out_felt_1, RECIPIENT]
+#! Inputs:  [asset_out_felt_2, asset_out_felt_1, RECIPIENT, tag]
 #! Outputs: []
 #!
 #! Note inputs are assumed to be as follows:
@@ -37,8 +37,8 @@ begin
     push.0 exec.note::get_inputs
     # => [num_inputs, inputs_ptr]
 
-    # make sure the number of inputs is 6
-    eq.6 assert.err=ERR_DEX_SWAP_WRONG_NUMBER_OF_INPUTS
+    # make sure the number of inputs is 7
+    eq.7 assert.err=ERR_DEX_SWAP_WRONG_NUMBER_OF_INPUTS
     drop
 
     push.ASSET_IN_MEM_ADDR
@@ -49,7 +49,7 @@ begin
     drop
 
     padw mem_loadw.RECIPIENT_MEM_ADDR 
-    padw mem_loadw.ASSET_OUT_FAUCET_MEM_ADDR drop drop swap
+    padw mem_loadw.ASSET_OUT_FAUCET_MEM_ADDR drop swap
     padw mem_loadw.ASSET_IN_MEM_ADDR
 
     call.pool::swap
